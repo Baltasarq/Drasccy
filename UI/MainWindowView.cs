@@ -8,29 +8,53 @@ namespace Drasccy {
     
     
     public class MainWindowView: WForms.Form {
-        const int MaxWidth = SpeccyPlatform.MaxWidth * 2;
-        const int MaxHeight = SpeccyPlatform.MaxHeight * 2;
+        public enum ZoomValue { x1 = 1, x2 = 2, x4 = 4, x8 = 8, x16 = 16 };
         
         public MainWindowView()
         {
             this.Build();
             
-            this.Grf.DrawLine( this.Pen, 0, 0, MaxWidth, MaxHeight );
+            this.Grf.DrawLine( this.Pen, 0, 0, this.Width, this.Height );
         }
 
         void Build()
         {
+            // Controls
             var pnl = new WForms.Panel {
                 Dock = WForms.DockStyle.Fill
             };
             
             pnl.Controls.Add( this.BuildDrawingArea() );
+            pnl.Controls.Add( this.BuildPalette()  );
             this.Controls.Add( pnl );
 
+            // Last touches
             this.Menu = this.BuildMainMenu();
-            this.ClientSize = new Draw.Size( MaxWidth, MaxHeight );
+            this.ClientSize = new Draw.Size( this.Width, this.Height );
             this.MinimumSize = this.ClientSize;
             this.Text = AppInfo.CompleteName;
+        }
+
+        WForms.TableLayoutPanel BuildPalette()
+        {
+            var toret = new WForms.TableLayoutPanel {
+                Dock = WForms.DockStyle.Left
+            };
+
+            this.BtLine = new WForms.Button {
+                Text = "Line",
+                Dock = WForms.DockStyle.Top
+            };
+            
+            // Measure max width
+            var grf = this.CreateGraphics();
+            int width = (int) grf.MeasureString( this.BtLine.Text, this.Font ).Width;
+            
+            // Finish
+            toret.Controls.Add( this.BtLine );
+            toret.MaximumSize = new Draw.Size( width * 2, int.MaxValue );
+            this.BtLine.Width = toret.MaximumSize.Width - 20;
+            return toret;
         }
 
         WForms.MainMenu BuildMainMenu()
@@ -47,19 +71,11 @@ namespace Drasccy {
 
         WForms.PictureBox BuildDrawingArea()
         {
-            var bmp = new Draw.Bitmap(
-                MaxWidth,
-                MaxHeight );
             this.Image = new WForms.PictureBox {
-                Dock = WForms.DockStyle.Fill,
-                Image = bmp,
-                Height = MaxHeight,
-                Width = MaxWidth
+                Dock = WForms.DockStyle.Fill
             };
-            
-            this.Grf = Draw.Graphics.FromImage( bmp );
-            this.Pen = new Draw.Pen( Draw.Color.Black );
-            this.Cls();
+
+            this.SetZoom( ZoomValue.x2 );
             return this.Image;
         }
 
@@ -67,8 +83,23 @@ namespace Drasccy {
         {
             this.Grf.FillRectangle( Draw.Brushes.White,
                                     0, 0,
-                                    MaxWidth,
-                                    MaxHeight ); 
+                                    this.Width,
+                                    this.Height ); 
+        }
+
+        public void SetZoom(ZoomValue zoomValue)
+        {
+            this.Zoom = (int) zoomValue;
+            
+            var bmp = new Draw.Bitmap(
+                this.Width,
+                this.Height );
+            this.Image.Image = bmp;
+            this.Image.Height = this.Height;
+            this.Image.Width = this.Width;
+            this.Grf = Draw.Graphics.FromImage( bmp );
+            this.Pen = new Draw.Pen( Draw.Color.Black );
+            this.Cls();
         }
 
         public Draw.Pen Pen {
@@ -76,6 +107,26 @@ namespace Drasccy {
         }
 
         public WForms.MenuItem OpQuit {
+            get; set;
+        }
+
+        public int Width {
+            get {
+                return SpeccyPlatform.MaxWidth * this.Zoom;
+            }
+        }
+        
+        public int Height {
+            get {
+                return SpeccyPlatform.MaxHeight * this.Zoom;
+            }
+        }
+
+        public WForms.Button BtLine {
+            get; set;
+        }
+
+        int Zoom {
             get; set;
         }
 
