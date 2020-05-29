@@ -4,6 +4,6 @@
 namespace Drasccy.Core {
     public static class SpeccyPlatform {
         public const int MaxWidth = 256;
-        public const int MaxHeight = 176;
+        public const int MaxHeight = 192;
     }
 }
